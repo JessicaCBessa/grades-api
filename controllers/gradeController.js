@@ -15,14 +15,17 @@ const create = async (req, res) => {
 
 const findAll = async (req, res) => {
   const name = req.query.name;
-
   //condicao para o filtro no findAll
   var condition = name
     ? { name: { $regex: new RegExp(name), $options: 'i' } }
     : {};
 
   try {
-    logger.info(`GET /grade`);
+    const grade = await db.findAll({
+      condition,
+    });
+    res.status(200).send(grade);
+    //logger.info(`GET /grade`);
   } catch (error) {
     res
       .status(500)
@@ -35,6 +38,10 @@ const findOne = async (req, res) => {
   const id = req.params.id;
 
   try {
+    const grade = await db.findOne({
+      _id: id,
+    });
+    res.status(200).send(grade);
     logger.info(`GET /grade - ${id}`);
   } catch (error) {
     res.status(500).send({ message: 'Erro ao buscar o Grade id: ' + id });
@@ -52,7 +59,12 @@ const update = async (req, res) => {
   const id = req.params.id;
 
   try {
-    logger.info(`PUT /grade - ${id} - ${JSON.stringify(req.body)}`);
+    const gradeUpdated = await db.findOneAndUpdate(
+      { _id: id },
+      { lastModified = Date.now },
+      { new: true }
+    );
+    res.status(200).send(gradeUpdated);
   } catch (error) {
     res.status(500).send({ message: 'Erro ao atualizar a Grade id: ' + id });
     logger.error(`PUT /grade - ${JSON.stringify(error.message)}`);
@@ -63,7 +75,10 @@ const remove = async (req, res) => {
   const id = req.params.id;
 
   try {
-    logger.info(`DELETE /grade - ${id}`);
+    await db.deleteOne({
+      _id: id
+    });
+    res.status(200).send('Documento removido');
   } catch (error) {
     res
       .status(500)
@@ -74,7 +89,9 @@ const remove = async (req, res) => {
 
 const removeAll = async (req, res) => {
   try {
-    logger.info(`DELETE /grade`);
+    await db.deleteMany({
+    });
+    res.status(200).send('Todos os documentos foram removidos');
   } catch (error) {
     res.status(500).send({ message: 'Erro ao excluir todos as Grades' });
     logger.error(`DELETE /grade - ${JSON.stringify(error.message)}`);
